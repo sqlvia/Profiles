@@ -18,9 +18,11 @@ class DatabaseHandler {
         $config = $plugin->getConfig()->get("databases");
 
         foreach ($config as $name => $dbSettings) {
+            $type = strtolower($dbSettings["type"] ?? "sqlite");
+            $sqlFile = ($type === "mysql") ? "mysql.sql" : "sqlite.sql";
+
             $connector = libasynql::create($plugin, $dbSettings, [
-                "sqlite" => "queries.sql",
-                "mysql" => "queries.sql"
+                $type => $sqlFile
             ]);
             $this->connectors[$name] = $connector;
             $connector->executeGeneric("profiles.init");
