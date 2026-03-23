@@ -10,17 +10,20 @@ use pocketmine\utils\Config;
 
 class Main extends PluginBase {
 
+    private static self $instance;
     private DatabaseHandler $databaseHandler;
     private ProfileManager $profileManager;
 
+    public static function getInstance(): self {
+        return self::$instance;
+    }
+
     protected function onEnable(): void {
+        self::$instance = $this;
         $this->saveDefaultConfig();
 
         $this->databaseHandler = new DatabaseHandler($this);
         $this->profileManager = new ProfileManager($this->databaseHandler);
-
-        // Register default components
-        $this->profileManager->registerComponent("stats", \ProfileSystem\component\StatsComponent::class);
 
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
