@@ -1,0 +1,11 @@
+name: CorePlugin
+version: 1.0.0
+main: Core\Main
+api: 5.0.0
+depend: [ProfileSystem]
+description: A central core plugin that manages ranks, economy, and player settings using the ProfileSystem.
+commands:
+  mydata:
+    description: "Check your current profile data"
+    permission: "core.command.mydata"
+...
