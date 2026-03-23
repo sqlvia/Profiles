@@ -1,0 +1,19 @@
+# Database configuration for multi-storage support.
+# Components can choose to be stored in "local" (SQLite) or "remote" (MySQL).
+
+databases:
+  remote:
+    type: mysql
+    mysql:
+      host: 127.0.0.1
+      username: root
+      password: ""
+      schema: profile_system
+      port: 3306
+    worker-limit: 2
+
+  local:
+    type: sqlite
+    sqlite:
+      file: local_data.sqlite
+    worker-limit: 1

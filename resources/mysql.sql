@@ -1,0 +1,24 @@
+-- #! mysql
+-- #{ profiles
+-- # { init
+CREATE TABLE IF NOT EXISTS player_profiles (
+    uuid VARCHAR(36) PRIMARY KEY,
+    username VARCHAR(16) NOT NULL,
+    components LONGTEXT NOT NULL
+);
+-- # }
+-- # { load
+-- # :uuid string
+SELECT * FROM player_profiles WHERE uuid = :uuid;
+-- # }
+-- # { upsert
+-- # :uuid string
+-- # :username string
+-- # :components string
+INSERT INTO player_profiles (uuid, username, components)
+VALUES (:uuid, :username, :components)
+ON DUPLICATE KEY UPDATE
+    username = VALUES(username),
+    components = VALUES(components);
+-- # }
+-- #}

@@ -1,0 +1,8 @@
+name: ProfileSystem
+version: 1.0.0
+main: ProfileSystem\Main
+api: 5.0.0
+author: Jules
+description: A highly optimized component-based profile system using libasynql.
+load: STARTUP
+...

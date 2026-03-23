@@ -1,0 +1,7 @@
+name: StatsPlugin
+version: 1.0.0
+main: Stats\Main
+api: 5.0.0
+depend: [ProfileSystem]
+description: An example external plugin using the ProfileSystem component architecture.
+...
