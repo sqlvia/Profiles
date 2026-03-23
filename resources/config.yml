@@ -1,0 +1,18 @@
+database:
+  # The database type. "sqlite" or "mysql".
+  type: sqlite
+
+  # Only for MySQL
+  mysql:
+    host: 127.0.0.1
+    username: root
+    password: ""
+    schema: profile_system
+    port: 3306
+
+  # Only for SQLite
+  sqlite:
+    file: data.sqlite
+
+  # Connection pool settings
+  worker-limit: 2
