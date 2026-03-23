@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ProfileSystem;
 
 use ProfileSystem\component\ProfileComponent;
-use pocketmine\player\Player;
 
 class Profile {
 
@@ -41,12 +40,14 @@ class Profile {
     }
 
     /**
-     * Serializes all components to JSON.
+     * Serializes components for a specific storage target.
      */
-    public function serializeComponents(): string {
+    public function serializeForTarget(string $target): string {
         $data = [];
         foreach ($this->components as $name => $component) {
-            $data[$name] = $component->serialize();
+            if ($component->getStorageTarget() === $target) {
+                $data[$name] = $component->serialize();
+            }
         }
         return json_encode($data, JSON_THROW_ON_ERROR);
     }

@@ -18,10 +18,6 @@ class ProfileManager {
 
     public function __construct(private DatabaseHandler $db) {}
 
-    /**
-     * Register a component class for all profiles.
-     * @param string $componentClass Must implement ProfileComponent
-     */
     public function registerComponent(string $name, string $componentClass): void {
         $this->componentRegistry[$name] = $componentClass;
     }
@@ -30,27 +26,32 @@ class ProfileManager {
         $uuid = $player->getUniqueId()->toString();
         $username = $player->getName();
 
-        $this->db->loadProfile($uuid, function(?array $data) use ($player, $uuid, $username, $onComplete) {
-            if (!$player->isOnline()) {
-                return; // Prevent race condition/memory leak if player left during loading
-            }
+        $profile = new Profile($uuid, $username);
+        foreach ($this->componentRegistry as $class) {
+            /** @var ProfileComponent $component */
+            $component = new $class();
+            $profile->addComponent($component);
+        }
 
-            $profile = new Profile($uuid, $username);
+        $targets = ["local", "remote"];
+        $loaded = 0;
+        $total = count($targets);
 
-            // Instantiate registered components
-            foreach ($this->componentRegistry as $class) {
-                /** @var ProfileComponent $component */
-                $component = new $class();
-                $profile->addComponent($component);
-            }
+        foreach ($targets as $target) {
+            $this->db->loadFromConnector($target, $uuid, function(?array $data) use ($player, $profile, $target, &$loaded, $total, $onComplete) {
+                if ($data !== null) {
+                    $profile->deserializeComponents($data["components"]);
+                }
 
-            if ($data !== null) {
-                $profile->deserializeComponents($data["components"]);
-            }
-
-            $this->profiles[$uuid] = $profile;
-            $onComplete($profile);
-        });
+                $loaded++;
+                if ($loaded === $total) {
+                    if ($player->isOnline()) {
+                        $this->profiles[$profile->getUuid()] = $profile;
+                        $onComplete($profile);
+                    }
+                }
+            });
+        }
     }
 
     public function getProfile(Player $player): ?Profile {
@@ -60,14 +61,22 @@ class ProfileManager {
     public function unloadProfile(Player $player): void {
         $uuid = $player->getUniqueId()->toString();
         if (isset($this->profiles[$uuid])) {
-            $this->db->saveProfile($this->profiles[$uuid]);
+            $this->saveProfile($this->profiles[$uuid]);
             unset($this->profiles[$uuid]);
+        }
+    }
+
+    private function saveProfile(Profile $profile): void {
+        foreach (["local", "remote"] as $target) {
+            $json = $profile->serializeForTarget($target);
+            // Only save if there's actually data or it exists
+            $this->db->saveToConnector($target, $profile->getUuid(), $profile->getUsername(), $json);
         }
     }
 
     public function saveAll(): void {
         foreach ($this->profiles as $profile) {
-            $this->db->saveProfile($profile);
+            $this->saveProfile($profile);
         }
     }
 }

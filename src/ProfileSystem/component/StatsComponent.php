@@ -16,6 +16,10 @@ class StatsComponent implements ProfileComponent {
         return "stats";
     }
 
+    public function getStorageTarget(): string {
+        return "remote"; // MySQL
+    }
+
     public function getKills(): int {
         return $this->kills;
     }

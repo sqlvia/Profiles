@@ -11,33 +11,46 @@ use pocketmine\plugin\Plugin;
 
 class DatabaseHandler {
 
-    private DataConnector $database;
+    /** @var array<string, DataConnector> */
+    private array $connectors = [];
 
     public function __construct(Plugin $plugin) {
-        $this->database = libasynql::create($plugin, $plugin->getConfig()->get("database"), [
-            "sqlite" => "queries.sql",
-            "mysql" => "queries.sql"
-        ]);
-        $this->database->executeGeneric("profiles.init");
+        $config = $plugin->getConfig()->get("databases");
+
+        foreach ($config as $name => $dbSettings) {
+            $connector = libasynql::create($plugin, $dbSettings, [
+                "sqlite" => "queries.sql",
+                "mysql" => "queries.sql"
+            ]);
+            $this->connectors[$name] = $connector;
+            $connector->executeGeneric("profiles.init");
+        }
     }
 
-    public function loadProfile(string $uuid, callable $callback): void {
-        $this->database->executeSelect("profiles.load", ["uuid" => $uuid], function(array $rows) use ($callback) {
+    public function loadFromConnector(string $connectorName, string $uuid, callable $callback): void {
+        if (!isset($this->connectors[$connectorName])) {
+            $callback(null);
+            return;
+        }
+
+        $this->connectors[$connectorName]->executeSelect("profiles.load", ["uuid" => $uuid], function(array $rows) use ($callback) {
             $callback($rows[0] ?? null);
         });
     }
 
-    public function saveProfile(Profile $profile): void {
-        $this->database->executeInsert("profiles.upsert", [
-            "uuid" => $profile->getUuid(),
-            "username" => $profile->getUsername(),
-            "components" => $profile->serializeComponents()
-        ]);
+    public function saveToConnector(string $connectorName, string $uuid, string $username, string $componentsJson): void {
+        if (isset($this->connectors[$connectorName])) {
+            $this->connectors[$connectorName]->executeInsert("profiles.upsert", [
+                "uuid" => $uuid,
+                "username" => $username,
+                "components" => $componentsJson
+            ]);
+        }
     }
 
     public function close(): void {
-        if (isset($this->database)) {
-            $this->database->close();
+        foreach ($this->connectors as $connector) {
+            $connector->close();
         }
     }
 }

@@ -12,6 +12,11 @@ interface ProfileComponent {
     public function getName(): string;
 
     /**
+     * Returns where this component should be stored (e.g. "remote" or "local").
+     */
+    public function getStorageTarget(): string;
+
+    /**
      * Serializes component data to an associative array for storage.
      * @return array<string, mixed>
      */
