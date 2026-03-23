@@ -9,12 +9,14 @@ use Core\component\EconomyComponent;
 use Core\component\SettingsComponent;
 use Core\command\MyDataCommand;
 use Core\listener\ChatListener;
+use Core\listener\ProfileListener;
 use ProfileSystem\Main as ProfileSystemMain;
 use pocketmine\plugin\PluginBase;
 
 class Main extends PluginBase {
 
     private static self $instance;
+    private CoreProfileManager $coreProfileManager;
 
     public static function getInstance(): self {
         return self::$instance;
@@ -22,6 +24,7 @@ class Main extends PluginBase {
 
     protected function onEnable(): void {
         self::$instance = $this;
+        $this->coreProfileManager = new CoreProfileManager();
 
         // Register core components in the ProfileSystem
         $pm = ProfileSystemMain::getInstance()->getProfileManager();
@@ -32,5 +35,10 @@ class Main extends PluginBase {
         // Register commands and events
         $this->getServer()->getCommandMap()->register("core", new MyDataCommand());
         $this->getServer()->getPluginManager()->registerEvents(new ChatListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new ProfileListener(), $this);
+    }
+
+    public function getCoreProfileManager(): CoreProfileManager {
+        return $this->coreProfileManager;
     }
 }
